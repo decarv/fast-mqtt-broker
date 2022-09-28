@@ -111,21 +111,28 @@ static inline void msg_queue_push(msg_queue_t* queue, msg_t* msg)
 	msg_node_t* node = msg_node_new(msg, NULL);
 	queue->tail->next = node;
 	queue->tail = node;
+#if DEBUG printf("Queue PUSH: %d\n", queue->tail->msg->value);
 	pthread_mutex_unlock(&queue->lock);
 }
 
 static inline msg_node_t* msg_queue_pop(msg_queue_t* queue)
 {
-	if (queue->size == 0 || queue->head->next == NULL) {
+	if (queue->size == 0) {
 		return NULL;
 	}
 
-	pthread_mutex_lock(&queue->lock);
+	pthread_mutex_lock(&(queue->lock));
 	queue->size -= 1;
 	msg_node_t* msg_node = queue->head->next;
 	queue->head->next = msg_node->next;
 	// TODO: msg_node_delete
-	pthread_mutex_unlock(&queue->lock);
+
+#if DEBUG printf("Queue POP: %d\n", msg_node->msg->value);
+
+	if (queue->tail == msg_node) { 			// nasty bug
+		queue->tail = queue->head;
+	}
+	pthread_mutex_unlock(&(queue->lock));
 
 	return msg_node;
 }
@@ -136,7 +143,7 @@ static inline void msg_queue_debug(msg_queue_t* queue)
 		printf("The queue is empty!");
 	}
 
-	pthread_mutex_lock(&queue->lock);
+	pthread_mutex_lock(&(queue->lock));
 	printf("Queue: ");
 	msg_node_t* node = queue->head->next;
 	while (node != NULL) {
@@ -144,7 +151,7 @@ static inline void msg_queue_debug(msg_queue_t* queue)
 		node = node->next;
 	}
 	printf("(size: %ld)\n", queue->size);
-	pthread_mutex_unlock(&queue->lock);
+	pthread_mutex_unlock(&(queue->lock));
 }
 
 

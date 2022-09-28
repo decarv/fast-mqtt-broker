@@ -13,22 +13,23 @@ void* pusher_thread(void* arg)
 	while (true) {
 		random = rand();
 		msg_queue_push(queue, msg_new(random));
-		printf("Queue pushed: %d\n", random);
 		msg_queue_debug(queue);
-		sleep(2);
+		sleep(1);
 	}
 }
 
 void* popper_thread(void* arg)
 {
 	msg_queue_t* queue = (msg_queue_t*) arg;
-	sleep(2);
+	sleep(4);
 	while (true) {
 		msg_node_t* node = msg_queue_pop(queue);
-		if (node == NULL) continue;
-		printf("Queue popped: %d\n", node->msg->value);
+		if (node == NULL) {
+			sleep(2);
+			continue;
+		}
 		msg_queue_debug(queue);
-		sleep(2);
+		sleep(1);
 	}
 }
 
